@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+<title>Umzug neues Haus</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #12141a;
+    --bg-elevated: #181b22;
+    --column-bg: #1b1e26;
+    --card-bg: #21242e;
+    --card-bg-hover: #262a35;
+    --border: #2c303c;
+    --text: #e8e9ed;
+    --text-secondary: #9ba0ae;
+    --text-dim: #6b7080;
+    --accent: #6d8bff;
+    --danger: #f0555a;
+    --success: #34c77b;
+    --warn: #f5b642;
+    --shadow: rgba(0,0,0,0.35);
+    --radius: 10px;
+    --pill-high-bg: #4a1d22;
+    --pill-high-text: #ff8f94;
+    --pill-medium-bg: #4a3a12;
+    --pill-medium-text: #ffcf6b;
+    --pill-low-bg: #1c2e22;
+    --pill-low-text: #7fe0a8;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f2f3f6;
+      --bg-elevated: #ffffff;
+      --column-bg: #e9eaf0;
+      --card-bg: #ffffff;
+      --card-bg-hover: #f6f7fa;
+      --border: #dcdee5;
+      --text: #1b1d24;
+      --text-secondary: #565b68;
+      --text-dim: #8a8f9c;
+      --shadow: rgba(0,0,0,0.08);
+      --pill-high-bg: #ffe1e2;
+      --pill-high-text: #b8272d;
+      --pill-medium-bg: #fff1cf;
+      --pill-medium-text: #8a5a00;
+      --pill-low-bg: #dcf5e6;
+      --pill-low-text: #1a7a45;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f3f6;
+    --bg-elevated: #ffffff;
+    --column-bg: #e9eaf0;
+    --card-bg: #ffffff;
+    --card-bg-hover: #f6f7fa;
+    --border: #dcdee5;
+    --text: #1b1d24;
+    --text-secondary: #565b68;
+    --text-dim: #8a8f9c;
+    --shadow: rgba(0,0,0,0.08);
+    --pill-high-bg: #ffe1e2;
+    --pill-high-text: #b8272d;
+    --pill-medium-bg: #fff1cf;
+    --pill-medium-text: #8a5a00;
+    --pill-low-bg: #dcf5e6;
+    --pill-low-text: #1a7a45;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Login gate — opaque, since nothing may be visible while logged out */
+  .pin-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .pin-overlay.show { display: flex; }
+
+  /* Hide the entire app until authenticated */
+  body.locked > header,
+  body.locked > #publishInfo,
+  body.locked > .view-tabs,
+  body.locked > #boardView,
+  body.locked > #infoView,
+  body.locked > #transitView { display: none !important; }
+  .pin-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+  }
+  .pin-box h2 { margin: 0 0 6px 0; font-size: 1.2rem; }
+  .pin-box p { margin: 0 0 4px 0; color: var(--text-secondary); font-size: 0.9rem; }
+  .auth-input {
+    width: 100%;
+    margin: 10px 0 0 0;
+    padding: 11px 12px;
+    font-size: 0.95rem;
+    text-align: left;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+  }
+  .pin-box form .btn.primary { margin-top: 14px; }
+  .pin-error { color: var(--danger); font-size: 0.82rem; margin-top: 10px; }
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: left;
+    cursor: pointer;
+  }
+  .remember-row input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 12px 0;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  #googleSignInBtn { display: flex; justify-content: center; min-height: 40px; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  #boardName {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 4px 6px;
+    border-radius: 6px;
+    min-width: 120px;
+  }
+  #boardName:hover, #boardName:focus { background: var(--card-bg); outline: none; }
+  #search {
+    flex: 1;
+    min-width: 140px;
+    max-width: 280px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  .btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--card-bg-hover); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { opacity: 0.9; }
+  .spacer { flex: 1; }
+
+  #publishInfo {
+    padding: 5px 20px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sync-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .sync-dot.ok { background: var(--success); }
+  .sync-dot.syncing { background: var(--warn); animation: pulse 1s ease-in-out infinite; }
+  .sync-dot.error { background: var(--danger); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* View tabs */
+  .view-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 20px 0 20px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+  .view-tab {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 6px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .view-tab:hover { color: var(--text); }
+  .view-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  #boardView {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #infoView, #transitView {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  /* Board */
+  #board {
+    flex: 1;
+    display: flex;
+    gap: 14px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .column {
+    background: var(--column-bg);
+    border-radius: var(--radius);
+    min-width: 300px;
+    max-width: 340px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    transition: background-color 0.2s ease;
+  }
+  .column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 8px 14px;
+  }
+  .column-header .title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .column-header .count {
+    background: var(--card-bg);
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+  .column-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 10px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 40px;
+  }
+  .add-task-btn {
+    margin: 0 10px 12px 10px;
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .add-task-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* Card */
+  .task-card {
+    position: relative;
+    background:
+      linear-gradient(120deg, var(--card-glow-bg, transparent) 0%, transparent 60%),
+      var(--card-bg);
+    border-radius: 8px;
+    padding: 12px 12px 10px 12px;
+    box-shadow: 0 0 18px -4px var(--card-glow, transparent), 0 1px 2px var(--shadow);
+    border-left: 4px solid var(--card-color, var(--accent));
+    transition: box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .task-card:hover {
+    background:
+      linear-gradient(120deg, var(--card-glow-bg-hover, transparent) 0%, transparent 65%),
+      var(--card-bg-hover);
+    box-shadow: 0 0 26px -3px var(--card-glow-strong, var(--card-glow, transparent)), 0 2px 6px var(--shadow);
+  }
+  .move-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .move-row {
+    display: grid;
+    gap: 5px;
+  }
+  .move-row.move-row-col { grid-template-columns: repeat(2, 1fr); }
+  .move-row.move-row-order { grid-template-columns: repeat(4, 1fr); }
+  .move-lg {
+    background: var(--border);
+    color: var(--text);
+    border: none;
+    border-radius: 7px;
+    padding: 5px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .move-lg:hover { background: var(--accent); color: #fff; }
+  .move-lg:disabled { opacity: 0.25; cursor: default; background: var(--border); color: var(--text); }
+  @media (hover: hover) and (pointer: fine) {
+    .move-controls {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+    }
+    .task-card:hover .move-controls,
+    .task-card:focus-within .move-controls {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+  .task-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .task-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+  .task-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+  .icon-btn:disabled { opacity: 0.25; cursor: default; }
+  .icon-btn:disabled:hover { background: none; color: var(--text-dim); }
+
+  .task-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 8px;
+  }
+  .task-field {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    word-break: break-word;
+  }
+  .task-field b { color: var(--text); font-weight: 700; }
+
+  .task-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .tag {
+    background: var(--border);
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  .task-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .pill.high { background: var(--pill-high-bg); color: var(--pill-high-text); }
+  .pill.medium { background: var(--pill-medium-bg); color: var(--pill-medium-text); }
+  .pill.low { background: var(--pill-low-bg); color: var(--pill-low-text); }
+  .difficulty {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+  .progress-wrap {
+    flex-basis: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .progress-bar { height: 100%; background: var(--success); }
+
+  /* Info view (Wertstoffhof & Baumarkt) */
+  .info-intro {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0 0 18px 0;
+    max-width: 640px;
+  }
+  .info-section { margin-bottom: 28px; }
+  .info-section h2 {
+    font-size: 0.95rem;
+    margin: 0 0 12px 0;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .info-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 2px var(--shadow);
+    border-left: 4px solid var(--accent);
+  }
+  .info-card h3 {
+    font-size: 0.9rem;
+    margin: 0 0 4px 0;
+  }
+  .info-address {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+  .info-hours {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+  }
+  .info-hours td {
+    padding: 2px 0;
+    color: var(--text-secondary);
+  }
+  .info-hours td:first-child {
+    color: var(--text);
+    font-weight: 600;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  .info-route-btn {
+    display: inline-block;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 7px;
+  }
+  .info-route-btn:hover { color: var(--text); border-color: var(--text-dim); }
+  .route-time {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .route-time.route-time-error { color: var(--danger); font-weight: 600; font-size: 0.78rem; }
+  .route-update-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .route-updated-at {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .info-disclaimer {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    max-width: 640px;
+    margin-top: 8px;
+  }
+
+  .departures-list {
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .departure-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .departure-row:last-child { border-bottom: none; }
+  .departure-line {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    min-width: 32px;
+    text-align: center;
+  }
+  .departure-direction {
+    flex: 1;
+    color: var(--text);
+  }
+  .departure-time {
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .departure-delay {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 0.75rem;
+  }
+  .departures-empty {
+    padding: 16px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .modal h2 { margin: 0 0 14px 0; font-size: 1.05rem; }
+  .field-group { margin-bottom: 12px; }
+  .field-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .field-group input[type="text"],
+  .field-group input[type="number"],
+  .field-group textarea,
+  .field-group select {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 0.85rem;
+    font-family: inherit;
+  }
+  .field-group textarea { resize: vertical; min-height: 44px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field-group { flex: 1; }
+  .field-group input[type="color"] {
+    width: 100%;
+    height: 34px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 2px;
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .modal-actions .right { display: flex; gap: 8px; margin-left: auto; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+
+  /* Column position dots (mobile swipe indicator) */
+  #columnDots {
+    display: none;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0 2px 0;
+    background: var(--bg-elevated);
+  }
+  #columnDots .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--border);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  #columnDots .dot.active { background: var(--accent); }
+
+  /* Mobile layout */
+  @media (max-width: 640px) {
+    header { padding: 10px 14px; gap: 8px; }
+    #boardName { font-size: 1rem; min-width: 0; flex: 1 1 auto; }
+    .spacer { flex-basis: 0; }
+    #search { order: 5; flex: 1 1 100%; max-width: 100%; }
+    .btn { padding: 9px 12px; font-size: 0.8rem; }
+    #publishInfo { padding: 5px 14px; font-size: 0.68rem; }
+
+    #board {
+      padding: 10px 12px 14px 12px;
+      gap: 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .column {
+      min-width: calc(100vw - 24px);
+      max-width: calc(100vw - 24px);
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+    }
+    #columnDots { display: flex; }
+
+    .task-card { padding: 14px 14px 12px 14px; }
+    .task-title { font-size: 0.95rem; }
+    .task-field { font-size: 0.82rem; }
+    .icon-btn { font-size: 1.05rem; padding: 6px 8px; }
+
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      max-width: 100%;
+      width: 100%;
+      max-height: 92vh;
+      border-radius: 16px 16px 0 0;
+      padding: 18px 18px calc(18px + env(safe-area-inset-bottom)) 18px;
+    }
+    .field-row { flex-direction: column; gap: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <h2>🔒 Umzug neues Haus</h2>
+    <p>Bitte anmelden</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" class="auth-input" placeholder="E-Mail" autocomplete="username" required>
+      <input type="password" id="loginPassword" class="auth-input" placeholder="Passwort" autocomplete="current-password" required>
+      <label class="remember-row">
+        <input type="checkbox" id="rememberMe" checked>
+        <span>Angemeldet bleiben</span>
+      </label>
+      <button type="submit" class="btn primary" style="width:100%;">Anmelden</button>
+      <p class="pin-error" id="pinError" style="display:none;"></p>
+    </form>
+    <div class="auth-divider"><span>oder</span></div>
+    <div id="googleSignInBtn"></div>
+  </div>
+</div>
+
+<header>
+  <input id="boardName" type="text" value="Umzug neues Haus">
+  <input id="search" type="text" placeholder="Aufgaben durchsuchen…">
+  <div class="spacer"></div>
+  <span class="sync-dot" id="syncStatus" title="Verbinde…"></span>
+  <button class="btn" id="themeToggle" title="Theme wechseln">🌙</button>
+  <button class="btn" id="logoutBtn" title="Abmelden">Abmelden</button>
+  <button class="btn primary" id="addColumnTaskBtn">+ Aufgabe</button>
+</header>
+<div id="publishInfo">Veröffentlicht: 07.08.2026, 10:24 Uhr</div>
+
+<div class="view-tabs">
+  <button class="view-tab active" data-view="boardView">📋 Board</button>
+  <button class="view-tab" data-view="infoView">♻️ Wertstoffhof &amp; Baumarkt</button>
+  <button class="view-tab" data-view="transitView">🚉 Bus &amp; Bahn</button>
+</div>
+
+<div id="boardView">
+  <div id="board"></div>
+  <div id="columnDots"></div>
+</div>
+
+<div id="infoView" style="display:none;">
+  <p class="info-intro">Öffnungszeiten Stand August 2026, ohne Gewähr – bitte vor Feiertagen gegenprüfen.</p>
+
+  <div class="route-update-bar">
+    <button class="btn primary" id="updateRoutesBtn">🔄 Fahrzeiten jetzt aktualisieren</button>
+    <span id="routesUpdatedAt" class="route-updated-at"></span>
+  </div>
+
+  <div class="info-section">
+    <h2>♻️ Wertstoffhöfe</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>Wertstoffhof Zirndorf-Leichendorf (Rangau)</h3>
+        <div class="info-address">Rangaustr. 60, 90513 Zirndorf</div>
+        <table class="info-hours">
+          <tr><td>Mo, Di, Do, Fr</td><td>8:00–12:00, 13:00–17:15 Uhr</td></tr>
+          <tr><td>Mi</td><td>geschlossen</td></tr>
+          <tr><td>Sa</td><td>8:00–13:00 Uhr</td></tr>
+          <tr><td>So</td><td>geschlossen</td></tr>
+        </table>
+        <div class="route-time" id="routetime-wertstoff-zirndorf">🚗 Fahrzeit: – </div>
+        <a class="info-route-btn" href="https://www.google.com/maps/dir/?api=1&amp;origin=Unterweihersbuch,+90547+Stein&amp;destination=Rangaustr.+60,+90513+Zirndorf&amp;travelmode=driving" target="_blank" rel="noopener">Route in Google Maps</a>
+      </div>
+
+      <div class="info-card">
+        <h3>Wertstoffhof Nürnberg Nord</h3>
+        <div class="info-address">Haeberleinstraße 7, 90411 Nürnberg</div>
+        <table class="info-hours">
+          <tr><td>Di–Fr</td><td>9:30–18:00 Uhr</td></tr>
+          <tr><td>Sa</td><td>9:30–15:00 Uhr</td></tr>
+          <tr><td>Mo, So, Feiertage</td><td>geschlossen</td></tr>
+        </table>
+        <div class="route-time" id="routetime-wertstoff-nbg-nord">🚗 Fahrzeit: – </div>
+        <a class="info-route-btn" href="https://www.google.com/maps/dir/?api=1&amp;origin=Unterweihersbuch,+90547+Stein&amp;destination=Haeberleinstra%C3%9Fe+7,+90411+N%C3%BCrnberg&amp;travelmode=driving" target="_blank" rel="noopener">Route in Google Maps</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h2>🛠️ Baumärkte</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>BAUHAUS Stein</h3>
+        <div class="info-address">Spitzleitenweg 11, 90547 Stein</div>
+        <table class="info-hours">
+          <tr><td>Mo–Sa</td><td>8:00–20:00 Uhr</td></tr>
+          <tr><td>So</td><td>geschlossen</td></tr>
+        </table>
+        <div class="route-time" id="routetime-bauhaus-stein">🚗 Fahrzeit: – </div>
+        <a class="info-route-btn" href="https://www.google.com/maps/dir/?api=1&amp;origin=Unterweihersbuch,+90547+Stein&amp;destination=Spitzleitenweg+11,+90547+Stein&amp;travelmode=driving" target="_blank" rel="noopener">Route in Google Maps</a>
+      </div>
+
+      <div class="info-card">
+        <h3>Hornbach Fürth</h3>
+        <div class="info-address">Magazinstraße 90, 90763 Fürth</div>
+        <table class="info-hours">
+          <tr><td>Mo–Sa</td><td>7:00–20:00 Uhr</td></tr>
+          <tr><td>So</td><td>geschlossen</td></tr>
+        </table>
+        <div class="route-time" id="routetime-hornbach-fuerth">🚗 Fahrzeit: – </div>
+        <a class="info-route-btn" href="https://www.google.com/maps/dir/?api=1&amp;origin=Unterweihersbuch,+90547+Stein&amp;destination=Magazinstra%C3%9Fe+90,+90763+F%C3%BCrth&amp;travelmode=driving" target="_blank" rel="noopener">Route in Google Maps</a>
+      </div>
+
+      <div class="info-card">
+        <h3>OBI Fürth</h3>
+        <div class="info-address">Am Annaberg 3–5, 90766 Fürth</div>
+        <table class="info-hours">
+          <tr><td>Mo–Sa</td><td>8:00–20:00 Uhr</td></tr>
+          <tr><td>So</td><td>geschlossen</td></tr>
+        </table>
+        <div class="route-time" id="routetime-obi-fuerth">🚗 Fahrzeit: – </div>
+        <a class="info-route-btn" href="https://www.google.com/maps/dir/?api=1&amp;origin=Unterweihersbuch,+90547+Stein&amp;destination=Am+Annaberg+3-5,+90766+F%C3%BCrth&amp;travelmode=driving" target="_blank" rel="noopener">Route in Google Maps</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="info-disclaimer">Quellen: recyclinghofwertstoffhof.de, nuernberg.de (Wertstoffhöfe) · meinprospekt.de, hornbach.de, obi-franken.de (Baumärkte). Feiertagsöffnungszeiten können abweichen. Fahrzeiten via TomTom Traffic, Luftlinie/Routing kann von Google Maps abweichen.</p>
+</div>
+
+<div id="transitView" style="display:none;">
+  <div class="route-update-bar">
+    <button class="btn primary" id="refreshTransitBtn">🔄 Abfahrten aktualisieren</button>
+    <span id="transitUpdatedAt" class="route-updated-at"></span>
+  </div>
+
+  <div class="info-section">
+    <h2>🚆 S-Bahn Unterasbach (Linie S4)</h2>
+    <div id="sbahnDepartures" class="departures-list">Lädt…</div>
+  </div>
+
+  <div class="info-section">
+    <h2>🚌 Bus Unterweihersbuch</h2>
+    <div id="busDepartures" class="departures-list">Lädt…</div>
+  </div>
+
+  <p class="info-disclaimer">Zeigt Abfahrten der nächsten 60 Minuten, automatische Aktualisierung alle 5 Minuten solange die Seite geöffnet ist. Daten über die offiziellen VGN-Schnittstellen: Bus über die VAG-Abfahrts-API, S-Bahn über die VGN-Fahrplanauskunft.</p>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Aufgabe bearbeiten</h2>
+    <form id="taskForm">
+      <div class="field-group">
+        <label>Titel</label>
+        <input type="text" id="f-title" required>
+      </div>
+      <div class="field-group">
+        <label>Was</label>
+        <textarea id="f-was"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Wer</label>
+          <input type="text" id="f-wer">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Von wo</label>
+          <input type="text" id="f-vonwo">
+        </div>
+        <div class="field-group">
+          <label>Nach wo</label>
+          <input type="text" id="f-nachwo">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Info</label>
+        <textarea id="f-info"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Spalte</label>
+          <select id="f-column"></select>
+        </div>
+        <div class="field-group">
+          <label>Priorität</label>
+          <select id="f-priority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Schwierigkeit (1–5)</label>
+          <input type="number" id="f-difficulty" min="1" max="5" value="1">
+        </div>
+        <div class="field-group">
+          <label>Fortschritt (%)</label>
+          <input type="number" id="f-progress" min="0" max="100" value="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Farbe</label>
+          <input type="color" id="f-color" value="#6d8bff">
+        </div>
+        <div class="field-group">
+          <label>Zeitaufwand</label>
+          <input type="text" id="f-time" placeholder="z.B. 30 min">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Kategorien (kommagetrennt)</label>
+        <input type="text" id="f-categories" placeholder="z.B. JEN, BIB">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="deleteTaskBtn" style="color:var(--danger);border-color:var(--danger);">Löschen</button>
+        <div class="right">
+          <button type="button" class="btn" id="cancelBtn">Abbrechen</button>
+          <button type="submit" class="btn primary">Speichern</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'umzugKanbanBoard';
+const THEME_KEY = 'umzugKanbanTheme';
+const AUTH_KEY = 'umzugKanbanAuth';
+const REMEMBER_KEY = 'umzugKanbanRemember';
+const FIREBASE_API_KEY = 'AIzaSyCpxgyX8i-kN3-4Ttl7qiyB9tNSq947i6U';
+const GOOGLE_CLIENT_ID = '962358467391-mp3mclrcmp7qauipinsd12p0d9pujkpj.apps.googleusercontent.com';
+const FIREBASE_URL = 'https://umzug-stein-default-rtdb.europe-west1.firebasedatabase.app';
+const BOARD_PATH = '/board.json';
+
+// "Angemeldet bleiben" = store the session in localStorage (survives
+// closing the browser). Unchecked = sessionStorage only (gone once the
+// tab/browser closes) — the standard remember-me pattern.
+function isRemembered() {
+  return localStorage.getItem(REMEMBER_KEY) !== '0';
+}
+
+let currentAuth = null;
+try {
+  const raw = localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
+  currentAuth = raw ? JSON.parse(raw) : null;
+} catch (e) { currentAuth = null; }
+
+function storeAuth(auth, remember) {
+  currentAuth = auth;
+  if (remember === undefined) remember = isRemembered();
+  localStorage.setItem(REMEMBER_KEY, remember ? '1' : '0');
+  if (remember) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    sessionStorage.removeItem(AUTH_KEY);
+  } else {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    localStorage.removeItem(AUTH_KEY);
+  }
+}
+
+function clearAuth() {
+  currentAuth = null;
+  localStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(AUTH_KEY);
+}
+
+async function signIn(email, password, remember) {
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, returnSecureToken: true })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const code = data.error && data.error.message || '';
+    throw new Error(code.includes('INVALID') || code.includes('PASSWORD') || code.includes('EMAIL_NOT_FOUND')
+      ? 'E-Mail oder Passwort falsch.' : 'Anmeldung fehlgeschlagen.');
+  }
+  storeAuth({
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    expiresAt: Date.now() + Number(data.expiresIn) * 1000,
+    email: data.email,
+    loginAt: Date.now()
+  }, remember);
+}
+
+async function signInWithGoogleIdToken(googleIdToken, remember) {
+  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${FIREBASE_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      postBody: `id_token=${googleIdToken}&providerId=google.com`,
+      requestUri: window.location.origin,
+      returnSecureToken: true
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error((data.error && data.error.message) || 'Google-Anmeldung fehlgeschlagen.');
+  storeAuth({
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    expiresAt: Date.now() + Number(data.expiresIn) * 1000,
+    email: data.email,
+    loginAt: Date.now()
+  }, remember);
+}
+
+const MAX_SESSION_MS = 30 * 24 * 60 * 60 * 1000; // force logout 30 days after original login
+
+function isSessionExpired() {
+  return !!(currentAuth && currentAuth.loginAt && (Date.now() - currentAuth.loginAt > MAX_SESSION_MS));
+}
+
+async function refreshAuthToken() {
+  if (!currentAuth || !currentAuth.refreshToken) return null;
+  if (isSessionExpired()) { clearAuth(); return null; }
+  try {
+    const res = await fetch(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(currentAuth.refreshToken)}`
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error('refresh failed');
+    storeAuth({
+      idToken: data.id_token,
+      refreshToken: data.refresh_token,
+      expiresAt: Date.now() + Number(data.expires_in) * 1000,
+      email: currentAuth.email,
+      loginAt: currentAuth.loginAt
+    });
+    return currentAuth;
+  } catch (e) {
+    clearAuth();
+    return null;
+  }
+}
+
+async function ensureFreshToken() {
+  if (!currentAuth) return null;
+  if (isSessionExpired()) { clearAuth(); return null; }
+  if (Date.now() > currentAuth.expiresAt - 5 * 60 * 1000) {
+    return await refreshAuthToken();
+  }
+  return currentAuth;
+}
+
+function logout() {
+  clearAuth();
+  updateAuthUI();
+  render();
+}
+
+function isLoggedIn() {
+  return !!currentAuth;
+}
+
+function updateAuthUI() {
+  const loggedIn = isLoggedIn();
+  document.body.classList.toggle('locked', !loggedIn);
+  document.getElementById('pinOverlay').classList.toggle('show', !loggedIn);
+  document.getElementById('logoutBtn').style.display = loggedIn ? '' : 'none';
+  document.getElementById('addColumnTaskBtn').style.display = loggedIn ? '' : 'none';
+  document.getElementById('boardName').disabled = !loggedIn;
+  if (!loggedIn) document.getElementById('loginEmail').focus();
+}
+
+const DEFAULT_COLUMNS = [
+  { id: 'todo', title: 'To Do' },
+  { id: 'in-progress', title: 'In Progress' },
+  { id: 'done', title: 'Done' }
+];
+
+const DEFAULT_TASKS = [
+  { id: 't1', title: 'Terrassensachen runtertragen', was: 'Terrassensachen inkl. Blumentopf runtertragen', wer: 'Alle', vonwo: 'Terrasse altes Haus', nachwo: 'Nach neues Haus, Pflanzen auf Terasse, Andere Terassen Sachen in Keller frag MIC/JEN', info: '', column: 'todo', priority: 'high', difficulty: 2, progress: 0, color: '#3b82f6', categories: ['Alle'], time: '' },
+  { id: 't2', title: 'Keller aufräumen/leeren', was: 'Keller aufräumen/leeren', wer: 'Alle', vonwo: 'Keller altes Haus, alles was gepackt im Gang steht bitte mitnehmen (Frag MIC und JEN wenn nicht sicher)', nachwo: 'Keller neues Haus, wenn man runter kommt nach Links an der treppe', info: '', column: 'todo', priority: 'high', difficulty: 2, progress: 0, color: '#3b82f6', categories: [], time: '' },
+  { id: 't3', title: "THE's Sachen in den Keller bringen", was: "THE's Sachen bringen (Kisten mit Kinderkleidung)", wer: 'Alle', vonwo: 'Wohnzimmer altes Haus', nachwo: 'Keller in Schwerlast regal Keller in neues Haus', info: 'bitte am Boden stellen und Staplen die unterste Reihe ist dafür vorgesehen', column: 'todo', priority: 'high', difficulty: 1, progress: 0, color: '#3b82f6', categories: ['Alle'], time: '' },
+  { id: 't4', title: 'Transplantation der alten Küche', was: 'Transplantation der alten Küche in die neue', wer: 'JEN + BIB', vonwo: 'Alte Wohnung', nachwo: 'Neue Wohnung', info: '', column: 'todo', priority: 'high', difficulty: 3, progress: 0, color: '#a855f7', categories: ['JEN', 'BIB'], time: '' },
+  { id: 't5', title: 'Lampen demontieren & Baufassungen installieren alte Wohnung', was: 'Lampen demontieren (ELL, Schlafzimmer, Wohnzimmer, Bad, Küche) und Baufassungen installieren', wer: 'FRI + 1', vonwo: '', nachwo: '', info: '', column: 'todo', priority: 'high', difficulty: 3, progress: 0, color: '#f97316', categories: ['FRI'], time: '' },
+  { id: 't6', title: 'Lampen montieeren installieren neue Wohnung', was: 'Lampen montieren (Wohnzimmer (zwei Lampen, Treppenaus EG--> OG1, OG1--> OG2), Flur EG Baufassungen installieren', wer: 'FRI + 1', vonwo: 'neues Haus', nachwo: 'neues Haus', info: 'Bitte Fotos nutzen um nicht die neuen Leitungen anzubohren', column: 'todo', priority: 'high', difficulty: 3, progress: 0, color: '#f97316', categories: ['FRI'], time: '' },
+  { id: 't7', title: "Wand in THE´s zimmer Streichen – THE's Zimmer", was: 'Schandfleck in THE´s zimmer erst mit Weiss Brillux streichen dann mit Blau darüber streichen', wer: 'TIN/SAB', vonwo: '', nachwo: 'neues Haus THE´s zimmer', info: 'Bitte erste das Klebeband weis überstreichen um es dann mit Blau wenn es etwas getrocknet ist wieder zu überstreichen (bei fragen JEN fragen)', column: 'todo', priority: 'high', difficulty: 1, progress: 0, color: '#eab308', categories: [], time: '' },
+  { id: 't8', title: 'Fußbodenleisten', was: 'Fußbodenleisten hinter großen gegenständen verlegen sollte mit Klebeband gekennzeichnet werden', wer: 'MAR+1( ggf MIC)', vonwo: 'neues Haus', nachwo: 'neues Haus', info: 'Wenn es schwierig ist die Gegenstände wieder von der Wand zu rücken bitte dahinter eine Fusbodenleiste Montiereen', column: 'todo', priority: 'medium', difficulty: 5, progress: 0, color: '#eab308', categories: [], time: '' },
+  { id: 't9', title: 'Tassenregal', was: 'Tassenregal aufbauen', wer: 'Tbd', vonwo: 'mitnehmen von altes Haus', nachwo: 'neues Haus, Küche', info: 'Bitte Aufbauen, werkzeug sollte bereit liegen wenn nicht MIC fragen', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#14b8a6', categories: [], time: '' },
+  { id: 't10', title: 'Kommode', was: 'Kommode aufbauen', wer: 'tbd', vonwo: 'mitnehmen von altes Haus', nachwo: 'neues Haus, THE', info: 'Bitte Aufbauen, werkzeug sollte bereit liegen wenn nicht MIC fragen', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#14b8a6', categories: [], time: '' },
+  { id: 't11', title: 'Flecken streichen', was: 'Flecken streichen', wer: 'TIN/SAB', vonwo: 'neues Haus', nachwo: 'neues Haus', info: 'Bitte Brilux farbe mit flausche rolle verwenden', column: 'todo', priority: 'medium', difficulty: 2, progress: 0, color: '#eab308', categories: ['TAN'], time: '' },
+  { id: 't12', title: 'Optional Fehler in Heizungsthermostat verdrahtung OG2 finden', was: 'Fehler in Heizungsthermostat verdrahtung OG2 finden', wer: 'Jmd der sich mit Strom auskennt', vonwo: '', nachwo: 'OG2 Schaltkasten/ELL Zimmern', info: 'Freischalten etc. thermostat entfernen schauen ob 230 V an Versorgung Thermostat ankommen um dann zu checken ob die Leitung im Verteilerkasten aufgelegt ist.', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#64748b', categories: [], time: '' },
+  { id: 't13', title: 'Optional Ventile der Heizkeisverteiler anschliesen', was: 'Keines der Ventile ist im Heizkreisverteiler angeschlossen, diesse müssen mit dem jeweiligen Termostat verbunden werden', wer: 'Jmd der sich mit Strom auskennt', vonwo: '', nachwo: 'Heizkreisverteilder der jeweiligen Etage', info: 'Freischalten etc. thermostat Durchmessen welches Thermostats auf welcher Leitung ankommt.\nEG: Alle ventile kommen auf ein Thermostat (easy)\nOG1: Bad, Schlafzimmer, THE extra\nOG2: Bad, ELL, Büro extra', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#64748b', categories: [], time: '' },
+  { id: 't14', title: 'Optional Patzer von Stucker ausbessern an Steckdosen mit Acryl auffüllen, oder ggf mit Rotband verspachteln', was: 'an einigen der Türen oder und Steckdosen sind "löcher" zu sehen hier fehlt putz', wer: 'Jmd der mit der Kelle umgehen kann, oder mit acryl', vonwo: '', nachwo: 'neues Haus im gesamten Haus', info: 'MIC nach Rotband (mischung 1 teil wasser 2 teile Roband) oder und Acryl fragen', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#64748b', categories: [], time: '' },
+  { id: 't15', title: 'Optional Lan und Koaxial Kable anklemmen', was: 'Einige Medien Dosen sind nicht angeschlossen (Lan / TV)', wer: 'Jmd der sich mit Strom auskennt', vonwo: '', nachwo: 'Wohnzimmer TV, flur, EG, Küchen insel, Schlafzimmer', info: 'MIC nach dosen fragen, Belegung A bitte nutzen ist auf Stecker so hinterlegt', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#64748b', categories: [], time: '' },
+  { id: 't16', title: 'Optional und Sklaven arbeit, Dachboden mit Alu Klebeband löcher zu machen', was: 'Dachboden mit Alu Klebeband löcher zu machen', wer: 'tbd', vonwo: '', nachwo: 'Dachboden', info: 'In der Dämmung, bzw der Dampfsperre im Dachboden sind risse diese müssen mit Alu Klebeband zu gemacht werden, MIC nach Klebeband fragen, bitte zwei alte Bodenabschnitte unter die Füge der Treppe legen sonst gibt es Abdrücke im Boden', column: 'todo', priority: 'low', difficulty: 1, progress: 0, color: '#64748b', categories: [], time: '' }
+];
+
+function normalizeState(data) {
+  const validCols = new Set((Array.isArray(data.columns) && data.columns.length ? data.columns : DEFAULT_COLUMNS).map(c => c.id));
+  return {
+    name: data.name || 'Umzug neues Haus',
+    columns: Array.isArray(data.columns) && data.columns.length
+      ? data.columns.map(c => ({ id: c.id, title: c.title }))
+      : DEFAULT_COLUMNS,
+    tasks: Array.isArray(data.tasks) ? data.tasks.map((t, i) => ({
+      id: t.id || ('t' + Date.now() + i),
+      title: t.title || 'Ohne Titel',
+      was: t.was || '',
+      wer: t.wer || '',
+      vonwo: t.vonwo || '',
+      nachwo: t.nachwo || '',
+      info: t.info || '',
+      column: validCols.has(t.column) ? t.column : 'todo',
+      priority: t.priority || 'medium',
+      difficulty: t.difficulty || 1,
+      progress: t.progress || 0,
+      color: t.color || '#6d8bff',
+      categories: t.categories || [],
+      time: t.time || t.timeEstimate || ''
+    })) : []
+  };
+}
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { return normalizeState(JSON.parse(raw)); } catch (e) { /* fall through to default */ }
+  }
+  return { name: 'Umzug neues Haus', columns: DEFAULT_COLUMNS, tasks: DEFAULT_TASKS };
+}
+
+let state = loadState();
+let editingTaskId = null;
+
+function moveTaskToPosition(taskId, targetColumnId, beforeTaskId) {
+  const idx = state.tasks.findIndex(t => t.id === taskId);
+  if (idx === -1) return;
+  const [task] = state.tasks.splice(idx, 1);
+  task.column = targetColumnId;
+  if (beforeTaskId && beforeTaskId !== taskId) {
+    const insertIdx = state.tasks.findIndex(t => t.id === beforeTaskId);
+    if (insertIdx === -1) state.tasks.push(task);
+    else state.tasks.splice(insertIdx, 0, task);
+  } else {
+    state.tasks.push(task);
+  }
+  saveState();
+  render();
+}
+
+function moveTaskVertical(taskId, delta) {
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  const siblings = state.tasks.filter(t => t.column === task.column);
+  const idx = siblings.findIndex(t => t.id === taskId);
+  const targetIdx = idx + delta;
+  if (targetIdx < 0 || targetIdx >= siblings.length) return;
+  if (delta < 0) {
+    moveTaskToPosition(taskId, task.column, siblings[targetIdx].id);
+  } else {
+    const afterSibling = siblings[targetIdx + 1];
+    moveTaskToPosition(taskId, task.column, afterSibling ? afterSibling.id : null);
+  }
+}
+
+function moveTaskToEdge(taskId, toTop) {
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  const siblings = state.tasks.filter(t => t.column === task.column && t.id !== taskId);
+  if (siblings.length === 0) return;
+  if (toTop) moveTaskToPosition(taskId, task.column, siblings[0].id);
+  else moveTaskToPosition(taskId, task.column, null);
+}
+
+function moveTask(taskId, delta) {
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  const idx = state.columns.findIndex(c => c.id === task.column);
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= state.columns.length) return;
+  task.column = state.columns[newIdx].id;
+  saveState();
+  render();
+}
+
+let pushTimer = null;
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushRemote, 400);
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.className = 'sync-dot ' + status;
+  el.title = status === 'ok' ? 'Live synchronisiert'
+    : status === 'syncing' ? 'Synchronisiert…'
+    : status === 'error' ? 'Offline – nur lokal gespeichert'
+    : 'Verbinde…';
+}
+
+async function pushRemote() {
+  if (!isLoggedIn()) return;
+  setSyncStatus('syncing');
+  try {
+    await ensureFreshToken();
+    if (!currentAuth) throw new Error('not authenticated');
+    await fetch(FIREBASE_URL + BOARD_PATH + '?auth=' + currentAuth.idToken, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    setSyncStatus('ok');
+  } catch (e) {
+    console.warn('Firebase push fehlgeschlagen', e);
+    setSyncStatus('error');
+  }
+}
+
+async function fetchRemote() {
+  // Reads are public — no token needed. If logged in we still send one
+  // (harmless) so a single fetch works whichever way the rules end up.
+  const auth = isLoggedIn() ? await ensureFreshToken() : null;
+  const url = FIREBASE_URL + BOARD_PATH + (auth ? '?auth=' + auth.idToken : '');
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function initRemote() {
+  setSyncStatus('syncing');
+  try {
+    const data = await fetchRemote();
+    if (data && Array.isArray(data.tasks) && data.tasks.length) {
+      state = normalizeState(data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+    } else {
+      await pushRemote();
+    }
+    setSyncStatus('ok');
+  } catch (e) {
+    console.warn('Firebase Erstladen fehlgeschlagen, nutze lokalen Stand', e);
+    setSyncStatus('error');
+  }
+  subscribeRealtime();
+}
+
+let realtimeES = null;
+
+async function subscribeRealtime() {
+  const auth = isLoggedIn() ? await ensureFreshToken() : null;
+  if (realtimeES) { realtimeES.close(); realtimeES = null; }
+  let es;
+  try {
+    es = new EventSource(FIREBASE_URL + BOARD_PATH + (auth ? '?auth=' + auth.idToken : ''));
+  } catch (e) {
+    setSyncStatus('error');
+    return;
+  }
+  realtimeES = es;
+  const onRemoteChange = () => {
+    fetchRemote().then(data => {
+      if (data && Array.isArray(data.tasks)) {
+        state = normalizeState(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+      }
+      setSyncStatus('ok');
+    }).catch(() => setSyncStatus('error'));
+  };
+  es.addEventListener('put', onRemoteChange);
+  es.addEventListener('patch', onRemoteChange);
+  es.onopen = () => setSyncStatus('ok');
+  es.onerror = async () => {
+    setSyncStatus('error');
+    es.close();
+    if (realtimeES === es) realtimeES = null;
+    if (isLoggedIn()) {
+      const refreshed = await refreshAuthToken();
+      if (refreshed) setTimeout(subscribeRealtime, 2000);
+    } else {
+      setTimeout(subscribeRealtime, 5000);
+    }
+  };
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function hexToRgba(hex, alpha) {
+  const h = (hex || '#6d8bff').replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') || getSystemTheme();
+}
+
+function updateThemeButton() {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = currentTheme() === 'dark' ? '☀️' : '🌙';
+}
+
+function applyTheme(theme) {
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+  else document.documentElement.removeAttribute('data-theme');
+  updateThemeButton();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function render() {
+  document.getElementById('boardName').value = state.name;
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  const searchTerm = document.getElementById('search').value.toLowerCase();
+
+  state.columns.forEach(col => {
+    const colTasks = state.tasks.filter(t => t.column === col.id && matchesSearch(t, searchTerm));
+
+    const colEl = document.createElement('div');
+    colEl.className = 'column';
+    colEl.dataset.column = col.id;
+    colEl.innerHTML = `
+      <div class="column-header">
+        <span class="title">${escapeHtml(col.title)}</span>
+        <span class="count">${colTasks.length}</span>
+      </div>
+      <div class="column-body" data-column="${col.id}"></div>
+      ${isLoggedIn() ? `<button class="add-task-btn" data-column="${col.id}">+ Aufgabe hinzufügen</button>` : ''}
+    `;
+    const body = colEl.querySelector('.column-body');
+
+    colTasks.forEach(task => body.appendChild(renderCard(task)));
+
+    const addBtn = colEl.querySelector('.add-task-btn');
+    if (addBtn) addBtn.addEventListener('click', () => openModal(null, col.id));
+
+    board.appendChild(colEl);
+  });
+
+  renderColumnDots();
+}
+
+function renderColumnDots() {
+  const dots = document.getElementById('columnDots');
+  const board = document.getElementById('board');
+  dots.innerHTML = state.columns.map((c, i) =>
+    `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}" title="${escapeHtml(c.title)}"></button>`
+  ).join('');
+
+  dots.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const columnEls = board.querySelectorAll('.column');
+      const target = columnEls[Number(dot.dataset.index)];
+      if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    });
+  });
+
+  let scrollTimeout;
+  board.onscroll = () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const columnEls = [...board.querySelectorAll('.column')];
+      const boardRect = board.getBoundingClientRect();
+      let closestIdx = 0;
+      let closestDist = Infinity;
+      columnEls.forEach((el, i) => {
+        const dist = Math.abs(el.getBoundingClientRect().left - boardRect.left);
+        if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+      });
+      dots.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === closestIdx));
+    }, 80);
+  };
+}
+
+function matchesSearch(task, term) {
+  if (!term) return true;
+  const hay = [task.title, task.was, task.wer, task.vonwo, task.nachwo, task.info, (task.categories || []).join(' ')]
+    .join(' ').toLowerCase();
+  return hay.includes(term);
+}
+
+function renderCard(task) {
+  const card = document.createElement('div');
+  card.className = 'task-card';
+  card.dataset.taskId = task.id;
+  const colIdx = state.columns.findIndex(c => c.id === task.column);
+  const isFirst = colIdx <= 0;
+  const isLast = colIdx >= state.columns.length - 1;
+  const color = task.color || '#6d8bff';
+  const isLight = currentTheme() === 'light';
+  card.style.setProperty('--card-color', color);
+  card.style.setProperty('--card-glow', hexToRgba(color, isLight ? 0.20 : 0.40));
+  card.style.setProperty('--card-glow-strong', hexToRgba(color, isLight ? 0.32 : 0.58));
+  card.style.setProperty('--card-glow-bg', hexToRgba(color, isLight ? 0.05 : 0.12));
+  card.style.setProperty('--card-glow-bg-hover', hexToRgba(color, isLight ? 0.08 : 0.18));
+
+  const fields = [
+    ['Was', task.was],
+    ['Wer', task.wer],
+    ['Von wo', task.vonwo],
+    ['Nach wo', task.nachwo],
+    ['Info', task.info]
+  ].filter(([, v]) => v && v.trim());
+
+  const fieldsHtml = fields.map(([label, value]) =>
+    `<div class="task-field"><b>${escapeHtml(label)}:</b> ${escapeHtml(value).replace(/\n/g, '<br>')}</div>`
+  ).join('');
+
+  const tagsHtml = (task.categories && task.categories.length)
+    ? `<div class="task-tags">${task.categories.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join('')}</div>`
+    : '';
+
+  const progressHtml = task.progress > 0
+    ? `<div class="progress-wrap"><div class="progress-bar" style="width:${task.progress}%"></div></div>`
+    : '';
+
+  const siblings = state.tasks.filter(t => t.column === task.column);
+  const siblingIdx = siblings.findIndex(t => t.id === task.id);
+  const isFirstInCol = siblingIdx <= 0;
+  const isLastInCol = siblingIdx >= siblings.length - 1;
+
+  const editable = isLoggedIn();
+
+  card.innerHTML = `
+    <div class="task-card-header">
+      <div class="task-title">${escapeHtml(task.title)}</div>
+      ${editable ? `
+      <div class="task-actions">
+        <button class="icon-btn edit-btn" title="Bearbeiten">✎</button>
+        <button class="icon-btn delete-btn" title="Löschen">×</button>
+      </div>` : ''}
+    </div>
+    ${editable ? `
+    <div class="move-controls">
+      <div class="move-row move-row-col">
+        <button class="move-lg move-col-left" title="Vorherige Spalte" ${isFirst ? 'disabled' : ''}>◀</button>
+        <button class="move-lg move-col-right" title="Nächste Spalte" ${isLast ? 'disabled' : ''}>▶</button>
+      </div>
+      <div class="move-row move-row-order">
+        <button class="move-lg move-top" title="Ganz nach oben" ${isFirstInCol ? 'disabled' : ''}>⏫</button>
+        <button class="move-lg move-up" title="Nach oben" ${isFirstInCol ? 'disabled' : ''}>▲</button>
+        <button class="move-lg move-down" title="Nach unten" ${isLastInCol ? 'disabled' : ''}>▼</button>
+        <button class="move-lg move-bottom" title="Ganz nach unten" ${isLastInCol ? 'disabled' : ''}>⏬</button>
+      </div>
+    </div>` : ''}
+    <div class="task-fields">${fieldsHtml}</div>
+    ${tagsHtml}
+    <div class="task-footer">
+      <span class="pill ${task.priority}">${task.priority}</span>
+      <span class="difficulty">Schwierigkeit ${task.difficulty}/5</span>
+      ${task.time ? `<span class="difficulty">⏱ ${escapeHtml(task.time)}</span>` : ''}
+      ${progressHtml}
+    </div>
+  `;
+
+  if (editable) {
+    card.querySelector('.move-col-left').addEventListener('click', () => moveTask(task.id, -1));
+    card.querySelector('.move-col-right').addEventListener('click', () => moveTask(task.id, 1));
+    card.querySelector('.move-top').addEventListener('click', () => moveTaskToEdge(task.id, true));
+    card.querySelector('.move-bottom').addEventListener('click', () => moveTaskToEdge(task.id, false));
+    card.querySelector('.move-up').addEventListener('click', () => moveTaskVertical(task.id, -1));
+    card.querySelector('.move-down').addEventListener('click', () => moveTaskVertical(task.id, 1));
+    card.querySelector('.edit-btn').addEventListener('click', () => openModal(task.id));
+    card.querySelector('.delete-btn').addEventListener('click', () => {
+      if (confirm(`"${task.title}" wirklich löschen?`)) {
+        state.tasks = state.tasks.filter(t => t.id !== task.id);
+        saveState();
+        render();
+      }
+    });
+  }
+
+  return card;
+}
+
+function openModal(taskId, defaultColumn) {
+  editingTaskId = taskId;
+  const columnSelect = document.getElementById('f-column');
+  columnSelect.innerHTML = state.columns.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('');
+
+  const deleteBtn = document.getElementById('deleteTaskBtn');
+
+  if (taskId) {
+    const task = state.tasks.find(t => t.id === taskId);
+    document.getElementById('modalTitle').textContent = 'Aufgabe bearbeiten';
+    document.getElementById('f-title').value = task.title;
+    document.getElementById('f-was').value = task.was || '';
+    document.getElementById('f-wer').value = task.wer || '';
+    document.getElementById('f-vonwo').value = task.vonwo || '';
+    document.getElementById('f-nachwo').value = task.nachwo || '';
+    document.getElementById('f-info').value = task.info || '';
+    columnSelect.value = task.column;
+    document.getElementById('f-priority').value = task.priority;
+    document.getElementById('f-difficulty').value = task.difficulty;
+    document.getElementById('f-progress').value = task.progress;
+    document.getElementById('f-color').value = task.color || '#6d8bff';
+    document.getElementById('f-time').value = task.time || '';
+    document.getElementById('f-categories').value = (task.categories || []).join(', ');
+    deleteBtn.style.display = 'inline-block';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Neue Aufgabe';
+    document.getElementById('taskForm').reset();
+    columnSelect.value = defaultColumn || state.columns[0].id;
+    document.getElementById('f-difficulty').value = 1;
+    document.getElementById('f-progress').value = 0;
+    document.getElementById('f-color').value = '#6d8bff';
+    deleteBtn.style.display = 'none';
+  }
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('f-title').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  editingTaskId = null;
+}
+
+document.getElementById('taskForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const data = {
+    title: document.getElementById('f-title').value.trim(),
+    was: document.getElementById('f-was').value.trim(),
+    wer: document.getElementById('f-wer').value.trim(),
+    vonwo: document.getElementById('f-vonwo').value.trim(),
+    nachwo: document.getElementById('f-nachwo').value.trim(),
+    info: document.getElementById('f-info').value.trim(),
+    column: document.getElementById('f-column').value,
+    priority: document.getElementById('f-priority').value,
+    difficulty: Math.min(5, Math.max(1, Number(document.getElementById('f-difficulty').value) || 1)),
+    progress: Math.min(100, Math.max(0, Number(document.getElementById('f-progress').value) || 0)),
+    color: document.getElementById('f-color').value,
+    time: document.getElementById('f-time').value.trim(),
+    categories: document.getElementById('f-categories').value.split(',').map(s => s.trim()).filter(Boolean)
+  };
+
+  if (editingTaskId) {
+    const task = state.tasks.find(t => t.id === editingTaskId);
+    Object.assign(task, data);
+  } else {
+    data.id = 't' + Date.now();
+    state.tasks.push(data);
+  }
+  saveState();
+  closeModal();
+  render();
+  showToast('Gespeichert');
+});
+
+document.getElementById('deleteTaskBtn').addEventListener('click', () => {
+  if (editingTaskId && confirm('Aufgabe wirklich löschen?')) {
+    state.tasks = state.tasks.filter(t => t.id !== editingTaskId);
+    saveState();
+    closeModal();
+    render();
+    showToast('Gelöscht');
+  }
+});
+
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+document.getElementById('addColumnTaskBtn').addEventListener('click', () => openModal(null, state.columns[0].id));
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('boardName').addEventListener('input', e => {
+  state.name = e.target.value;
+  saveState();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+  render();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  if (confirm('Wirklich abmelden?')) logout();
+});
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const remember = document.getElementById('rememberMe').checked;
+  const errorEl = document.getElementById('pinError');
+  errorEl.style.display = 'none';
+  try {
+    await signIn(email, password, remember);
+    updateAuthUI();
+    render();
+    initRemote();
+    refreshTransit();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Anmeldung fehlgeschlagen.';
+    errorEl.style.display = 'block';
+  }
+});
+
+let googleSignInInitialized = false;
+
+function initGoogleSignIn() {
+  if (googleSignInInitialized) return;
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    setTimeout(initGoogleSignIn, 300);
+    return;
+  }
+  if (GOOGLE_CLIENT_ID.indexOf('REPLACE_WITH') === 0) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential
+  });
+  google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), {
+    theme: 'outline', size: 'large', width: 280, text: 'signin_with'
+  });
+  googleSignInInitialized = true;
+}
+
+async function handleGoogleCredential(response) {
+  const errorEl = document.getElementById('pinError');
+  errorEl.style.display = 'none';
+  const remember = document.getElementById('rememberMe').checked;
+  try {
+    await signInWithGoogleIdToken(response.credential, remember);
+    updateAuthUI();
+    render();
+    initRemote();
+    refreshTransit();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Google-Anmeldung fehlgeschlagen.';
+    errorEl.style.display = 'block';
+  }
+}
+
+document.querySelectorAll('.view-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.view;
+    document.getElementById('boardView').style.display = target === 'boardView' ? 'flex' : 'none';
+    document.getElementById('infoView').style.display = target === 'infoView' ? 'block' : 'none';
+    document.getElementById('transitView').style.display = target === 'transitView' ? 'block' : 'none';
+  });
+});
+
+// --- Live-Abfahrten Bus & S-Bahn ---
+const SBAHN_STOP_ID = '3005610'; // Unterasbach (S4) – VGN/EFA-Haltestellen-ID
+const BUS_STOP_ID = 5760; // Unterweihersbuch (Stein b Nürnberg) – Linie 63
+const TRANSIT_WINDOW_MIN = 60;
+
+function formatDepartureTime(iso) {
+  return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+// EFA liefert Datum/Uhrzeit als Objekt aus Einzelfeldern statt als ISO-String
+function efaDateTimeToDate(dt) {
+  if (!dt) return null;
+  return new Date(Number(dt.year), Number(dt.month) - 1, Number(dt.day), Number(dt.hour), Number(dt.minute));
+}
+
+async function fetchSbahnDepartures() {
+  const url = `https://efa.vgn.de/vgnExt_oeffi/XML_DM_REQUEST?outputFormat=JSON&type_dm=any&name_dm=${SBAHN_STOP_ID}&mode=direct&useRealtime=1&limit=30`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return (data.departureList || [])
+    .filter(dep => Number(dep.countdown) <= TRANSIT_WINDOW_MIN)
+    .map(dep => {
+      const line = dep.servingLine || {};
+      const planned = efaDateTimeToDate(dep.dateTime);
+      const actual = efaDateTimeToDate(dep.realDateTime) || planned;
+      return {
+        line: line.number || line.symbol || '?',
+        direction: line.direction || '',
+        when: actual.toISOString(),
+        delayMin: Math.max(0, Math.round((actual - planned) / 60000))
+      };
+    });
+}
+
+async function fetchBusDepartures() {
+  const res = await fetch(`https://start.vag.de/dm/api/v1/abfahrten/VGN/${BUS_STOP_ID}?product=Bus&timespan=${TRANSIT_WINDOW_MIN}&timedelay=0&limitcount=30`);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return (data.Abfahrten || []).map(dep => {
+    const soll = new Date(dep.AbfahrtszeitSoll);
+    const ist = new Date(dep.AbfahrtszeitIst || dep.AbfahrtszeitSoll);
+    return {
+      line: dep.Linienname,
+      direction: dep.Richtungstext || '',
+      when: dep.AbfahrtszeitIst || dep.AbfahrtszeitSoll,
+      delayMin: Math.max(0, Math.round((ist - soll) / 60000))
+    };
+  });
+}
+
+function renderDepartures(containerId, departures, emptyMsg) {
+  const el = document.getElementById(containerId);
+  if (!departures.length) { el.innerHTML = `<div class="departures-empty">${escapeHtml(emptyMsg)}</div>`; return; }
+  el.innerHTML = departures.map(dep => `
+    <div class="departure-row">
+      <span class="departure-line">${escapeHtml(dep.line)}</span>
+      <span class="departure-direction">${escapeHtml(dep.direction)}</span>
+      <span class="departure-time">${formatDepartureTime(dep.when)}${dep.delayMin > 0 ? ` <span class="departure-delay">+${dep.delayMin}</span>` : ''}</span>
+    </div>
+  `).join('');
+}
+
+async function refreshTransit() {
+  if (!isLoggedIn()) return; // don't poll while the app is locked
+  const btn = document.getElementById('refreshTransitBtn');
+  const statusEl = document.getElementById('transitUpdatedAt');
+  btn.disabled = true;
+  btn.textContent = '⏳ Aktualisiere…';
+
+  try {
+    const sbahn = await fetchSbahnDepartures();
+    renderDepartures('sbahnDepartures', sbahn, 'Keine Abfahrten in den nächsten 60 Minuten.');
+  } catch (e) {
+    document.getElementById('sbahnDepartures').innerHTML = '<div class="departures-empty">S-Bahn-Daten momentan nicht verfügbar.</div>';
+  }
+
+  try {
+    const bus = await fetchBusDepartures();
+    renderDepartures('busDepartures', bus, 'Keine Abfahrten in den nächsten 60 Minuten.');
+  } catch (e) {
+    document.getElementById('busDepartures').innerHTML = '<div class="departures-empty">Bus-Daten momentan nicht verfügbar.</div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Abfahrten aktualisieren';
+  statusEl.textContent = 'Zuletzt aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+document.getElementById('refreshTransitBtn').addEventListener('click', refreshTransit);
+setInterval(refreshTransit, 5 * 60 * 1000);
+
+// --- Live-Fahrzeiten (TomTom Routing API, verkehrsabhängig) ---
+const TOMTOM_API_KEY = 'o97kYKqPvlf6KdFDg5JbW0Pln4gfC0yz';
+const ROUTE_ORIGIN = { lat: 49.409776, lon: 11.000571 }; // Bushaltestelle Unterweihersbuch (oeffentlicher Startpunkt statt Hausadresse)
+
+const ROUTE_DESTINATIONS = [
+  { id: 'wertstoff-zirndorf', lat: 49.4349541, lon: 10.9182809 },
+  { id: 'wertstoff-nbg-nord', lat: 49.4798853, lon: 11.1148579 },
+  { id: 'bauhaus-stein', lat: 49.4071455, lon: 11.0010592 },
+  { id: 'hornbach-fuerth', lat: 49.4517780, lon: 11.0007295 },
+  { id: 'obi-fuerth', lat: 49.4848777, lon: 10.9512995 }
+];
+
+async function fetchRouteTime(dest) {
+  const url = `https://api.tomtom.com/routing/1/calculateRoute/${ROUTE_ORIGIN.lat},${ROUTE_ORIGIN.lon}:${dest.lat},${dest.lon}/json?key=${TOMTOM_API_KEY}&traffic=true&travelMode=car`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  const summary = data.routes[0].summary;
+  return {
+    minutes: Math.round(summary.travelTimeInSeconds / 60),
+    km: Math.round(summary.lengthInMeters / 100) / 10
+  };
+}
+
+async function updateAllRouteTimes() {
+  const btn = document.getElementById('updateRoutesBtn');
+  const statusEl = document.getElementById('routesUpdatedAt');
+
+  if (TOMTOM_API_KEY.indexOf('REPLACE_WITH') === 0) {
+    statusEl.textContent = 'Noch kein TomTom-API-Key eingetragen.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Aktualisiere…';
+  statusEl.textContent = '';
+
+  await Promise.all(ROUTE_DESTINATIONS.map(async dest => {
+    const el = document.getElementById('routetime-' + dest.id);
+    if (el) { el.textContent = '🚗 Fahrzeit: lädt…'; el.classList.remove('route-time-error'); }
+    try {
+      const result = await fetchRouteTime(dest);
+      if (el) el.textContent = `🚗 ${result.minutes} Min (${result.km} km, mit Verkehr)`;
+    } catch (e) {
+      if (el) { el.textContent = 'Fahrzeit konnte nicht geladen werden'; el.classList.add('route-time-error'); }
+    }
+  }));
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Fahrzeiten jetzt aktualisieren';
+  statusEl.textContent = 'Zuletzt aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+document.getElementById('updateRoutesBtn').addEventListener('click', updateAllRouteTimes);
+
+async function boot() {
+  applyTheme(localStorage.getItem(THEME_KEY));
+  if (currentAuth) await ensureFreshToken();
+  updateAuthUI();
+  initGoogleSignIn();
+  // Nothing is fetched or rendered while logged out — the login form is
+  // the only thing on the page until sign-in succeeds.
+  if (!isLoggedIn()) return;
+  render();
+  initRemote();
+  refreshTransit();
+}
+
+boot();
+</script>
+
+</body>
+</html>
